@@ -1,16 +1,11 @@
-#!/usr/bin/python
-# #  FileName    : fuck12306.py
-# #  Author      : MaoMao Wang <andelf@gmail.com>
-# #  Created     : Mon Mar 16 22:08:41 2015 by ShuYu Wang
-# #  Copyright   : Feather (c) 2015
-# #  Description : fuck fuck 12306
-# #  Time-stamp: <2015-03-17 10:57:44 andelf>
+#!/usr/bin/env python
+#encoding=utf-8
 
 
 from PIL import Image
 from PIL import ImageFilter
 import urllib
-import urllib2
+import requests
 import re
 import json
 import tempfile
@@ -29,8 +24,8 @@ pic_url = "http://pic3.zhimg.com/76754b27584233c2287986dc0577854a_b.jpg"
 
 
 def get_img():
-    resp = urllib.urlopen(pic_url)
-    raw = resp.read()
+    resp = requests.get(pic_url)
+    raw = resp.content
     tmp_jpg = tempfile.NamedTemporaryFile(prefix="fuck12306_").name + ".jpg"
     with open(tmp_jpg, 'wb') as fp:
         fp.write(raw)
@@ -46,18 +41,18 @@ def get_img():
 def get_sub_img(im, x, y):
     assert 0 <= x <= 3
     assert 0 <= y <= 2
-    WITH = HEIGHT = 68
     left = 5 + (67 + 5) * x
     top = 41 + (67 + 5) * y
     right = left + 67
     bottom = top + 67
-
+    #crop返回当前图像的一个矩形区域
     return im.crop((left, top, right, bottom))
 
 
 def baidu_stu_lookup(im):
     url = "http://stu.baidu.com/n/image?fr=html5&needRawImageUrl=true&id=WU_FILE_0&name=233.png&type=image%2Fpng&lastModifiedDate=Mon+Mar+16+2015+20%3A49%3A11+GMT%2B0800+(CST)&size="
     tmp_jpg = tempfile.NamedTemporaryFile(prefix="fuck12306_").name + ".png"
+    #
     im.save(tmp_jpg)
     raw = open(tmp_jpg, 'rb').read()
     try:
@@ -65,19 +60,21 @@ def baidu_stu_lookup(im):
     except OSError:
         pass
     url = url + str(len(raw))
+    
+    '''
     req = urllib2.Request(url, raw, {'Content-Type':'image/png', 'User-Agent':UA})
     resp = urllib2.urlopen(req)
-
-    resp_url = resp.read()      # return a pure url
+    resp_url = resp.read()
+    '''
+    resp = requests.post(url, data=raw, headers = {'Content-Type':'image/png', 'User-Agent':UA})
+    resp_url = resp.content      # return a pure url
 
 
     url = "http://stu.baidu.com/n/searchpc?queryImageUrl=" + urllib.quote(resp_url)
+     
+    resp = requests.get(url, headers={'User-Agent':UA})
 
-    req = urllib2.Request(url, headers={'User-Agent':UA})
-    resp = urllib2.urlopen(req)
-
-    html = resp.read()
-
+    html = resp.content
     return baidu_stu_html_extract(html)
 
 
@@ -148,7 +145,7 @@ def binarize(im, thresh=120):
 if __name__ == '__main__':
     im = get_img()
     #im = Image.open("./tmp.jpg")
-    print 'OCR Question:', ocr_question_extract(im)
+    #print 'OCR Question:', ocr_question_extract(im)
     for y in range(2):
         for x in range(4):
             im2 = get_sub_img(im, x, y)
