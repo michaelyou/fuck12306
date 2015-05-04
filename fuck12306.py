@@ -12,6 +12,7 @@ import tempfile
 import os
 # hack CERTIFICATE_VERIFY_FAILED
 # https://github.com/mtschirs/quizduellapi/issues/2
+#这是干嘛的？
 import ssl
 if hasattr(ssl, '_create_unverified_context'):
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -69,7 +70,7 @@ def baidu_stu_lookup(im):
     resp = requests.post(url, data=raw, headers = {'Content-Type':'image/png', 'User-Agent':UA})
     resp_url = resp.content      # return a pure url
 
-
+    #quote用来转换url格式
     url = "http://stu.baidu.com/n/searchpc?queryImageUrl=" + urllib.quote(resp_url)
      
     resp = requests.get(url, headers={'User-Agent':UA})
@@ -77,7 +78,7 @@ def baidu_stu_lookup(im):
     html = resp.content
     return baidu_stu_html_extract(html)
 
-
+#提取关键字
 def baidu_stu_html_extract(html):
     #pattern = re.compile(r'<script type="text/javascript">(.*?)</script>', re.DOTALL | re.MULTILINE)
     pattern = re.compile(r"keywords:'(.*?)'")
